@@ -1,0 +1,81 @@
+<!-- Botão que abre a Modal -->
+<button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#formModal">
+    Novo Cadastro
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="formModal" tabindex="-1" aria-labelledby="formModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <!-- Cabeçalho -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="formModalLabel">Cadastro de Categoria</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+
+            <!-- Corpo -->
+            <div class="modal-body">
+                <form [formGroup]="categoria">
+
+                    <div class="mb-3">
+                        <input type="text" placeholder="Nome" class="form-control" formControlName="nome">
+                    </div>
+
+                    <div class="mb-3">
+                        <input type="text" placeholder="Descricao" class="form-control" formControlName="descricao">
+                    </div>
+
+                        <select class="form-select" aria-label="Default select example">
+                        <option selected> Seleciona a Categoria</option>
+                        <option value="1">Tutorial</option>
+                        <option value="2">Dicas</option>
+                        <option value="3">Blog</option>
+                        </select>
+
+                    <!-- Botões -->
+                    <div class="d-flex justify-content-between">
+                        @if (btnCadastrar) {
+                        <button type="button" class="btn btn-primary" (click)="cadastrar()">Cadastrar</button>
+                        } @else {
+                        <button type="button" class="btn btn-warning" (click)="alterar()">Alterar</button>
+                        <button type="button" class="btn btn-danger" (click)="remover()">Remover</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                            (click)="cancelar()">Cancelar</button>
+                        }
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Tabela -->
+<table class="table table-bordered mt-3">
+    <thead class="table-dark">
+        <tr>
+            <th>Id</th>
+            <th>Nome</th>
+            <th>Descricao</th>
+            <th>Tipo Categoria</th>
+            <th>Selecionar</th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (v of vetor; track $index; let i = $index) {
+        <tr>
+            <td>{{ v.id }}</td>
+            <td>{{ v.nome }}</td>
+            <td>{{ v.descricao }}</td>
+            <td>{{ v.tipoCategoria }}</td>
+            <td>
+                <button type="button" class="btn btn-info btn-sm" (click)="selecionar(i)"
+                    data-bs-toggle="modal" data-bs-target="#formModal">
+                    Selecionar
+                </button>
+            </td>
+        </tr>
+        }
+    </tbody>
+</table>
