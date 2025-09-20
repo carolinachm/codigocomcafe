@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { CategoriaService } from '../service/categoria-service';
-import { CategoriaModel } from '../model/CategoriaModel';
+import { FormGroup, FormControl, Validators, ReactiveFormsModule } from '@angular/forms';
+import { CategoriaService } from '../../service/categoria-service';
+import { CategoriaModel } from '../../model/CategoriaModel';
 
 @Component({
   selector: 'app-categoria',
   templateUrl: './categoria.html',
-  styleUrls: ['./categoria.css']   // <- era "styleUrl"
+  styleUrls: ['./categoria.css'],
+  imports:[ReactiveFormsModule]  // <- era "styleUrl"
 })
 export class Categoria implements OnInit {
 

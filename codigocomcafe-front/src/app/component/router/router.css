@@ -1,0 +1,33 @@
+ /* Sidebar normal */
+  .sidebar {
+    width: 260px;
+    transition: all 0.3s ease;
+  }
+
+  /* Sidebar colapsada */
+  .sidebar.collapsed {
+    width: 80px;
+  }
+
+  .sidebar.collapsed .sidebar-text {
+    display: none;
+  }
+
+  .sidebar.collapsed .nav-link {
+    justify-content: center;
+  }
+
+  .nav-link {
+    transition: background 0.3s ease, padding-left 0.3s ease;
+    border-radius: 8px;
+  }
+
+  .nav-link:hover {
+    background: rgba(255, 255, 255, 0.15);
+    padding-left: 12px;
+  }
+
+  .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.25);
+    font-weight: 600;
+  }
