@@ -18,27 +18,71 @@
             <div class="modal-body">
                 <form [formGroup]="categoria">
 
+                    <!-- Nome -->
                     <div class="mb-3">
                         <input type="text" placeholder="Nome" class="form-control" formControlName="nome">
+                        @if (categoria.get('nome')?.invalid && (categoria.get('nome')?.dirty ||
+                        categoria.get('nome')?.touched)) {
+                        <div class="text-danger mt-1">
+                            @if (categoria.get('nome')?.errors?.['required']) {
+                            O campo Nome é obrigatório.
+                            }
+                            @if (categoria.get('nome')?.errors?.['minlength']) {
+                            O Nome deve ter no mínimo 3 caracteres.
+                            }
+                        </div>
+                        }
                     </div>
 
+                    <!-- Descrição -->
                     <div class="mb-3">
                         <input type="text" placeholder="Descricao" class="form-control" formControlName="descricao">
+                        @if (categoria.get('descricao')?.invalid && (categoria.get('descricao')?.dirty ||
+                        categoria.get('descricao')?.touched)) {
+                        <div class="text-danger mt-1">
+                            @if (categoria.get('descricao')?.errors?.['required']) {
+                            O campo Descrição é obrigatório.
+                            }
+                            @if (categoria.get('descricao')?.errors?.['minlength']) {
+                            A Descrição deve ter no mínimo 50 caracteres.
+                            }
+                        </div>
+                        }
                     </div>
 
-                        <select class="form-select" aria-label="Default select example">
-                        <option selected> Seleciona a Categoria</option>
-                        <option value="1">Tutorial</option>
-                        <option value="2">Dicas</option>
-                        <option value="3">Blog</option>
+                    <!-- Tipo da Categoria -->
+                    <!-- Tipo da Categoria -->
+                    <div class="mb-3">
+                        <select class="form-select" formControlName="tipoCategoria">
+                            <option value="">Selecione a Categoria</option>
+                            @for (tipo of tiposCategoria; track tipo.id) {
+                            <option [value]="tipo.id">{{ tipo.nome }}</option>
+                            }
                         </select>
+
+                        @if (categoria.get('tipoCategoria')?.invalid && (categoria.get('tipoCategoria')?.dirty ||
+                        categoria.get('tipoCategoria')?.touched)) {
+                        <div class="text-danger mt-1">
+                            @if (categoria.get('tipoCategoria')?.errors?.['required']) {
+                            O campo Tipo da Categoria é obrigatório.
+                            }
+                        </div>
+                        }
+                    </div>
+
 
                     <!-- Botões -->
                     <div class="d-flex justify-content-between">
                         @if (btnCadastrar) {
-                        <button type="button" class="btn btn-primary" (click)="cadastrar()">Cadastrar</button>
+                        <button type="button" class="btn btn-primary" (click)="cadastrar()"
+                            [disabled]="categoria.invalid">
+                            Cadastrar
+                        </button>
                         } @else {
-                        <button type="button" class="btn btn-warning" (click)="alterar()">Alterar</button>
+                        <button type="button" class="btn btn-warning" (click)="alterar()"
+                            [disabled]="categoria.invalid">
+                            Alterar
+                        </button>
                         <button type="button" class="btn btn-danger" (click)="remover()">Remover</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
                             (click)="cancelar()">Cancelar</button>
@@ -68,10 +112,11 @@
             <td>{{ v.id }}</td>
             <td>{{ v.nome }}</td>
             <td>{{ v.descricao }}</td>
-            <td>{{ v.tipoCategoria }}</td>
+            <!-- Mostrando o nome legível do enum -->
+            <td>{{ v.tipoCategoria}}</td>
             <td>
-                <button type="button" class="btn btn-info btn-sm" (click)="selecionar(i)"
-                    data-bs-toggle="modal" data-bs-target="#formModal">
+                <button type="button" class="btn btn-info btn-sm" (click)="selecionar(i)" data-bs-toggle="modal"
+                    data-bs-target="#formModal">
                     Selecionar
                 </button>
             </td>

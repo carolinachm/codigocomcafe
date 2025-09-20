@@ -12,6 +12,7 @@ import { CategoriaModel } from '../../model/CategoriaModel';
 export class Categoria implements OnInit {
 
   btnCadastrar: boolean = true;
+  
 
   // ---------------------------
   // Formulário reativo tipado
@@ -19,12 +20,39 @@ export class Categoria implements OnInit {
   categoria = new FormGroup({
     id: new FormControl<number | null>(null),
     nome: new FormControl<string | null>(null, [Validators.required, Validators.minLength(3)]),
-    descricao: new FormControl<string | null>(null, [Validators.required, Validators.minLength(50)]),
+    descricao: new FormControl<string | null>(null, [Validators.required, Validators.minLength(3)]),
     tipoCategoria: new FormControl<string | null>('', [Validators.required, Validators.minLength(3)])
   });
 
   // Vetor para armazenar categorias
   vetor: CategoriaModel[] = [];
+
+// 🔹 Lista de tipos de categoria (para o select)
+// ? dúvida - pode fazer isso?
+tiposCategoria = [
+  { id: 'TUTORIAL', nome: 'Tutorial' },
+  { id: 'DICAS', nome: 'Dicas' },
+  { id: 'BLOG', nome: 'Blog' },
+  { id: 'NOTICIAS', nome: 'Notícias' },
+  { id: 'LANÇAMENTOS', nome: 'Lançamentos' },
+  { id: 'REVIEWS', nome: 'Reviews' },
+  { id: 'COMPARATIVOS', nome: 'Comparativos' },
+  { id: 'OPINIAO', nome: 'Opinião' },
+  { id: 'CARREIRA', nome: 'Carreira' },
+  { id: 'EVENTOS', nome: 'Eventos' },
+  { id: 'SEGURANCA', nome: 'Segurança' },
+  { id: 'INTELIGENCIA_ARTIFICIAL', nome: 'Inteligência Artificial' },
+  { id: 'CLOUD_COMPUTING', nome: 'Cloud Computing' },
+  { id: 'PROGRAMACAO', nome: 'Programação' },
+  { id: 'BANCO_DE_DADOS', nome: 'Banco de Dados' },
+  { id: 'FRONTEND', nome: 'Frontend' },
+  { id: 'BACKEND', nome: 'Backend' },
+  { id: 'DEVOPS', nome: 'DevOps' },
+  { id: 'MOBILE', nome: 'Mobile' },
+  { id: 'GADGETS', nome: 'Gadgets' }
+];
+
+
 
   // Índice da categoria selecionada
   indiceCategoriaSelecionada: number = -1;
@@ -49,6 +77,7 @@ export class Categoria implements OnInit {
   // Cadastrar nova categoria
   // ---------------------------
   cadastrar(): void {
+    // ! o salvar não está funcionando corretamente :(
     const novaCategoria: CategoriaModel = this.categoria.value as CategoriaModel;
 
     // Gera ID incremental (se não tiver backend cuidando disso)
