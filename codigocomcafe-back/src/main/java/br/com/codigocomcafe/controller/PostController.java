@@ -24,7 +24,7 @@ import java.util.List;
 @Tag(name = "Post", description = "Endpoints para gerenciamento de posts")
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*")
+
 public class PostController {
 
     @Autowired
@@ -36,43 +36,64 @@ public class PostController {
     @Autowired
     private CategoriaService categoriaService;
 
-    // ------------------- CREATE -------------------
+    @PostMapping(value = "/posts", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Criar novo post")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Post criado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos")
+            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
+            @ApiResponse(responseCode = "404", description = "Categoria não encontrada"),
+            @ApiResponse(responseCode = "500", description = "Erro interno")
     })
-    @PostMapping(value = "/posts", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<PostModel> cadastraPost(
             @RequestParam String titulo,
+            @RequestParam String autor,
             @RequestParam String conteudo,
             @RequestParam("imagem") MultipartFile imagemFile,
             @RequestParam(value = "video", required = false) MultipartFile videoFile,
             @RequestParam Status status,
-            @RequestParam Long categoriaId) {
+            @RequestParam(required = false) Long categoriaId) {
 
         try {
-            byte[] imagemBytes = imagemFile != null ? imagemFile.getBytes() : null;
-            byte[] videoBytes = videoFile != null ? videoFile.getBytes() : null;
+            // 🔹 Validação básica
+            if (titulo == null || titulo.isBlank() ||
+                    autor == null || autor.isBlank() ||
+                    conteudo == null || conteudo.isBlank() ||
+                    imagemFile == null || imagemFile.isEmpty()) {
+                return ResponseEntity.badRequest().build();
+            }
 
-            CategoriaModel categoria = categoriaService.buscarPorId(categoriaId);
+            String nomeImagem = uploadService.armazenarArquivo(imagemFile);
+            String nomeVideo = videoFile != null ? uploadService.armazenarArquivo(videoFile) : null;
 
+            // 🔹 Buscar categoria se fornecida
+            CategoriaModel categoria = null;
+            if (categoriaId != null) {
+                categoria = categoriaService.buscarPorId(categoriaId);
+                if (categoria == null) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+                }
+            }
+
+            // 🔹 Montar o post
             PostModel post = new PostModel();
             post.setTitulo(titulo);
+            post.setAutor(autor);
             post.setConteudo(conteudo);
-            post.setImagem(imagemBytes);
-            post.setVideo(videoBytes);
+            post.setImagem(nomeImagem);
+            post.setVideo(nomeVideo);
             post.setStatus(status);
             post.setDataCriacao(LocalDateTime.now());
             post.setDataAtualizacao(LocalDateTime.now());
             post.setDataPublicacao(LocalDateTime.now());
-            post.setCategoria(categoria);
+            post.setCategoriaModel(categoria); // ⚠️ Aqui é o correto
 
+            // 🔹 Salvar no banco
             PostModel salvo = postService.cadastraPost(post);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
 
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -91,6 +112,23 @@ public class PostController {
         return postService.buscarPorId(id)
                 .map(post -> new ResponseEntity<>(post, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @Operation(summary = "Buscar posts por nome da categoria")
+    @GetMapping("/posts/categoria/{nome}")
+    public ResponseEntity<List<PostModel>> buscarPostsPorCategoria(@PathVariable String nome) {
+        try {
+            CategoriaModel categoria = categoriaService.buscarPorNome(nome);
+            List<PostModel> posts = postService.buscarPorCategoria(categoria);
+
+            if (posts.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(posts, HttpStatus.OK);
+
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     // ------------------- UPDATE -------------------

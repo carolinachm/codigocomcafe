@@ -17,7 +17,7 @@ import java.util.List;
 @Tag(name = "Categoria", description = "Endpoints para gerenciamento de categorias")
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*")
+
 public class CategoriaController {
 
     @Autowired
@@ -48,6 +48,18 @@ public class CategoriaController {
     @GetMapping("/categorias/{id}")
     public ResponseEntity<CategoriaModel> buscarPorId(@PathVariable Long id) {
         CategoriaModel categoria = categoriaService.buscarPorId(id);
+        if (categoria != null) {
+            return new ResponseEntity<>(categoria, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    // ------------------- READ BY ID -------------------
+    @Operation(summary = "Buscar categoria por Nome")
+    @GetMapping("/categorias/{nome}")
+    public ResponseEntity<CategoriaModel> buscarPorNome(@PathVariable String nome) {
+        CategoriaModel categoria = categoriaService.buscarPorNome(nome);
         if (categoria != null) {
             return new ResponseEntity<>(categoria, HttpStatus.OK);
         } else {

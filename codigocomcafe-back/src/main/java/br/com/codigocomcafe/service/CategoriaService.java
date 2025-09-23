@@ -21,6 +21,10 @@ public class CategoriaService {
     public CategoriaModel buscarPorId(Long id) {
         return categoriaRepository.findById(id).get();
     }
+    public CategoriaModel buscarPorNome(String nome){
+        return categoriaRepository.findByNome(nome)
+                    .orElseThrow(() -> new RuntimeException("Categoria não encontrada: " + nome));
+    }
     public CategoriaModel atualizarCategoria(CategoriaModel categoria) {
         return categoriaRepository.save(categoria);
     }

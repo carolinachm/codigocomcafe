@@ -2,16 +2,18 @@ package br.com.codigocomcafe.model;
 
 import br.com.codigocomcafe.enumerador.Status;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Entity
 @Table(name = "tb_post")
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class PostModel {
@@ -20,20 +22,19 @@ public class PostModel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank
     private String titulo;
 
-    @Column(columnDefinition = "TEXT") // permite salvar textos longos
+    private String autor;
+
+    @Column(columnDefinition = "TEXT")
+    @NotBlank
     private String conteudo;
 
-    @Lob
-    @Column(name = "imagem")
-    private byte[] imagem;
+    private String imagem; // nome do arquivo
+    private String video; // nome do arquivo
 
-    @Lob
-    @Column(name = "video")
-    private byte[] video;
-
-    @Enumerated(EnumType.STRING) // salva o enum como texto
+    @Enumerated(EnumType.STRING)
     private Status status;
 
     private LocalDateTime dataCriacao;
@@ -41,6 +42,17 @@ public class PostModel {
     private LocalDateTime dataPublicacao;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "categoria_id", nullable = false) // chave estrangeira
-    private CategoriaModel categoria;
+    @JoinColumn(name = "categoria_id", nullable = false)
+    private CategoriaModel categoriaModel;
+
+    @PrePersist
+    protected void onCreate() {
+        dataCriacao = LocalDateTime.now();
+        dataAtualizacao = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        dataAtualizacao = LocalDateTime.now();
+    }
 }
