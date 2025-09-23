@@ -1,5 +1,5 @@
 <!-- Botão que abre a Modal -->
-<button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#formModal">
+<button id="btn-novo-post" type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#formModal">
     Novo Post
 </button>
 
@@ -11,19 +11,18 @@
             <!-- Cabeçalho -->
             <div class="modal-header">
                 <h5 class="modal-title" id="formModalLabel">Cadastro de Post</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar" id="btn-fechar-modal"></button>
             </div>
 
             <!-- Corpo -->
             <div class="modal-body">
-                <form [formGroup]="post">
+                <form [formGroup]="post" id="form-post">
 
                     <!-- Título -->
                     <div class="mb-3">
-                        <input type="text" placeholder="Título" class="form-control" formControlName="titulo">
-                        @if (post.get('titulo')?.invalid && (post.get('titulo')?.dirty || post.get('titulo')?.touched))
-                        {
-                        <div class="text-danger mt-1">
+                        <input id="input-titulo" type="text" placeholder="Título" class="form-control" formControlName="titulo">
+                        @if (post.get('titulo')?.invalid && (post.get('titulo')?.dirty || post.get('titulo')?.touched)) {
+                        <div class="text-danger mt-1" id="erro-titulo">
                             @if (post.get('titulo')?.errors?.['required']) {
                             O campo Título é obrigatório.
                             }
@@ -34,13 +33,26 @@
                         }
                     </div>
 
+                    <!-- Autor -->
+                    <div class="mb-3">
+                        <input id="input-autor" type="text" placeholder="Autor" class="form-control" formControlName="autor">
+                        @if (post.get('autor')?.invalid && (post.get('autor')?.dirty || post.get('autor')?.touched)) {
+                        <div class="text-danger mt-1" id="erro-autor">
+                            @if (post.get('autor')?.errors?.['required']) {
+                            O campo Autor é obrigatório.
+                            }
+                            @if (post.get('autor')?.errors?.['minlength']) {
+                            O Autor deve ter no mínimo 3 caracteres.
+                            }
+                        </div>
+                        }
+                    </div>
+
                     <!-- Conteúdo -->
                     <div class="mb-3">
-                        <textarea placeholder="Conteúdo" class="form-control" formControlName="conteudo"
-                            rows="4"></textarea>
-                        @if (post.get('conteudo')?.invalid && (post.get('conteudo')?.dirty ||
-                        post.get('conteudo')?.touched)) {
-                        <div class="text-danger mt-1">
+                        <textarea id="input-conteudo" placeholder="Conteúdo" class="form-control" formControlName="conteudo" rows="4"></textarea>
+                        @if (post.get('conteudo')?.invalid && (post.get('conteudo')?.dirty || post.get('conteudo')?.touched)) {
+                        <div class="text-danger mt-1" id="erro-conteudo">
                             @if (post.get('conteudo')?.errors?.['required']) {
                             O campo Conteúdo é obrigatório.
                             }
@@ -52,32 +64,34 @@
                     </div>
 
                     <!-- Imagem -->
-                    <div class="mb-3">
-                        <label>Imagem (Base64)</label>
-                        <input type="file" class="form-control" (change)="onImagemChange($event)">
+                    <div class="upload-container mb-3">
+                        <label>Imagem</label>
+                        <input id="input-imagem" type="file" (change)="onFileSelected($event, 'imagem')" accept=".jpg,.jpeg,.png" class="form-control mb-2" />
+                        <button id="btn-upload-imagem" type="button" class="btn btn-success" [disabled]="!selectedFileImage" (click)="upload('imagem')">
+                            Upload Imagem
+                        </button>
                     </div>
 
                     <!-- Vídeo -->
-                    <div class="mb-3">
-                        <label>Vídeo (Base64)</label>
-                        <input type="file" class="form-control" (change)="onVideoChange($event)">
+                    <div class="upload-container mb-3">
+                        <label>Vídeo</label>
+                        <input id="input-video" type="file" (change)="onFileSelected($event, 'video')" accept=".mp4,.avi,.mov" class="form-control mb-2" />
+                        <button id="btn-upload-video" type="button" class="btn btn-success" [disabled]="!selectedFileVideo" (click)="upload('video')">
+                            Upload Vídeo
+                        </button>
                     </div>
 
                     <!-- Status -->
                     <div class="mb-3">
-                        <select class="form-select" formControlName="status">
+                        <select id="select-status" class="form-select" formControlName="status">
                             <option value="">Selecione o Status</option>
-                            @for (status of statusPost; track status.id)
-                            {
+                            @for (status of statusPost; track status.id) {
                             <option [value]="status.id">{{status.nome}}</option>
                             }
                         </select>
-                        @if (post.get('status')?.invalid && (post.get('status')?.dirty || post.get('status')?.touched))
-                        {
-                        <div class="text-danger mt-1">
-                            @if (post.get('status')?.errors?.['required']) {
+                        @if (post.get('status')?.invalid && (post.get('status')?.dirty || post.get('status')?.touched)) {
+                        <div class="text-danger mt-1" id="erro-status">
                             O campo Status é obrigatório.
-                            }
                         </div>
                         }
                     </div>
@@ -86,21 +100,21 @@
                     <div class="mb-3 row">
                         <div class="col">
                             <label>Data de Criação</label>
-                            <input type="date" class="form-control" formControlName="dataCriacao">
+                            <input id="input-data-criacao" type="date" class="form-control" formControlName="dataCriacao">
                         </div>
                         <div class="col">
                             <label>Data de Atualização</label>
-                            <input type="date" class="form-control" formControlName="dataAtualizacao">
+                            <input id="input-data-atualizacao" type="date" class="form-control" formControlName="dataAtualizacao">
                         </div>
                         <div class="col">
                             <label>Data de Publicação</label>
-                            <input type="date" class="form-control" formControlName="dataPublicacao">
+                            <input id="input-data-publicacao" type="date" class="form-control" formControlName="dataPublicacao">
                         </div>
                     </div>
 
                     <!-- Categoria -->
                     <div class="mb-3">
-                        <select class="form-select" formControlName="categoria">
+                        <select id="select-categoria" class="form-select" formControlName="categoria">
                             <option value="">Selecione a Categoria</option>
                             @for (c of categorias; track c.id) {
                             <option [value]="c.id">{{ c.nome }}</option>
@@ -111,14 +125,11 @@
                     <!-- Botões -->
                     <div class="d-flex justify-content-between">
                         @if (btnCadastrar) {
-                        <button type="button" class="btn btn-primary" (click)="cadastrar()"
-                            [disabled]="post.invalid">Cadastrar</button>
+                        <button id="btn-cadastrar" type="button" class="btn btn-primary" (click)="cadastrar()" [disabled]="post.invalid">Cadastrar</button>
                         } @else {
-                        <button type="button" class="btn btn-warning" (click)="alterar()"
-                            [disabled]="post.invalid">Alterar</button>
-                        <button type="button" class="btn btn-danger" (click)="remover()">Remover</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                            (click)="cancelar()">Cancelar</button>
+                        <button id="btn-alterar" type="button" class="btn btn-warning" (click)="alterar()" [disabled]="post.invalid">Alterar</button>
+                        <button id="btn-remover" type="button" class="btn btn-danger" (click)="remover()">Remover</button>
+                        <button id="btn-cancelar" type="button" class="btn btn-secondary" data-bs-dismiss="modal" (click)="cancelar()">Cancelar</button>
                         }
                     </div>
 
@@ -130,11 +141,12 @@
 </div>
 
 <!-- Tabela -->
-<table class="table table-bordered mt-3">
+<table id="tabela-posts" class="table table-bordered mt-3">
     <thead class="table-dark">
         <tr>
             <th>Id</th>
             <th>Título</th>
+            <th>Autor</th>
             <th>Conteúdo</th>
             <th>Imagem</th>
             <th>Vídeo</th>
@@ -148,9 +160,10 @@
     </thead>
     <tbody>
         @for (v of vetor; track $index; let i = $index) {
-        <tr>
+        <tr id="post-{{v.id}}">
             <td>{{ v.id }}</td>
             <td>{{ v.titulo }}</td>
+            <td>{{ v.autor}}</td>
             <td>{{ v.conteudo }}</td>
             <td>{{ v.imagem ? 'Sim' : 'Não' }}</td>
             <td>{{ v.video ? 'Sim' : 'Não' }}</td>
@@ -160,8 +173,7 @@
             <td>{{ v.dataPublicacao }}</td>
             <td>{{ v.categoria?.nome }}</td>
             <td>
-                <button type="button" class="btn btn-info btn-sm" (click)="selecionar(i)" data-bs-toggle="modal"
-                    data-bs-target="#formModal">
+                <button id="btn-selecionar-{{v.id}}" type="button" class="btn btn-info btn-sm" (click)="selecionar(i)" data-bs-toggle="modal" data-bs-target="#formModal">
                     Selecionar
                 </button>
             </td>

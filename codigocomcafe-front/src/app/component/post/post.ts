@@ -1,124 +1,162 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormControl, Validators, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { HttpErrorResponse, HttpEventType } from '@angular/common/http';
+
 import { PostService } from '../../service/post-service';
-import { PostModel } from '../../model/PostModel';
+import { UploadService } from '../../service/upload-service';
+import { PostModel, Status } from '../../model/PostModel';
+import { CategoriaModel } from '../../model/CategoriaModel';
 
 @Component({
   selector: 'app-post',
   templateUrl: './post.html',
   styleUrls: ['./post.css'],
-  imports: [ReactiveFormsModule]
+  imports: [ReactiveFormsModule, CommonModule],
+  providers: [UploadService]
 })
 export class Post implements OnInit {
 
   btnCadastrar: boolean = true;
+  indicePostSelecionado: number = -1;
 
-  // ---------------------------
-  // Formulário reativo tipado
-  // ---------------------------
+  selectedFileImage: File | undefined;
+  selectedFileVideo: File | undefined;
+  uploadProgress: number = 0;
+
   post = new FormGroup({
     id: new FormControl<number | null>(null),
     titulo: new FormControl<string | null>(null, [Validators.required, Validators.minLength(3)]),
+    autor: new FormControl<string | null>(null, [Validators.required, Validators.minLength(3)]),
+
     conteudo: new FormControl<string | null>(null, [Validators.required, Validators.minLength(3)]),
-    imagem: new FormControl<string | null>(null),  // Base64
-    video: new FormControl<string | null>(null),   // Base64
-    status: new FormControl<string | null>('', [Validators.required]),
-    dataCriacao: new FormControl<string | null>(null),    // ISO 8601 ou input type="date"
-    dataAtualizacao: new FormControl<string | null>(null),// ISO 8601 ou input type="date"
-    dataPublicacao: new FormControl<string | null>(null), // ISO 8601 ou input type="date"
-    categoria: new FormControl<number | null>(null)       // Id da categoria selecionada
+    status: new FormControl<Status | null>(null, [Validators.required]),
+    categoria: new FormControl<number | null>(null),
+    dataCriacao: new FormControl<Date | null>(null),
+    dataAtualizacao: new FormControl<Date | null>(null),
+    dataPublicacao: new FormControl<Date | null>(null),
+    imagem: new FormControl<File | null>(null),   // controle de imagem
+    video: new FormControl<File | null>(null)
   });
 
 
-  // Vetor para armazenar posts
+
   vetor: PostModel[] = [];
 
-  // 🔹 Lista de status do post (para o select)
-  statusPost = [
+  statusPost: { id: Status, nome: string }[] = [
     { id: 'RASCUNHO', nome: 'Rascunho' },
     { id: 'PUBLICADO', nome: 'Publicado' },
     { id: 'EXCLUIDO', nome: 'Excluído' }
   ];
 
-  categorias = [
-    { id: 'TUTORIAL', nome: 'Tutorial' },
-    { id: 'DICAS', nome: 'Dicas' },
-    { id: 'BLOG', nome: 'Blog' },
-    { id: 'NOTICIAS', nome: 'Notícias' },
-    { id: 'LANÇAMENTOS', nome: 'Lançamentos' },
-    { id: 'REVIEWS', nome: 'Reviews' },
-    { id: 'COMPARATIVOS', nome: 'Comparativos' },
-    { id: 'OPINIAO', nome: 'Opinião' },
-    { id: 'CARREIRA', nome: 'Carreira' },
-    { id: 'EVENTOS', nome: 'Eventos' },
-    { id: 'SEGURANCA', nome: 'Segurança' },
-    { id: 'INTELIGENCIA_ARTIFICIAL', nome: 'Inteligência Artificial' },
-    { id: 'CLOUD_COMPUTING', nome: 'Cloud Computing' },
-    { id: 'PROGRAMACAO', nome: 'Programação' },
-    { id: 'BANCO_DE_DADOS', nome: 'Banco de Dados' },
-    { id: 'FRONTEND', nome: 'Frontend' },
-    { id: 'BACKEND', nome: 'Backend' },
-    { id: 'DEVOPS', nome: 'DevOps' },
-    { id: 'MOBILE', nome: 'Mobile' },
-    { id: 'GADGETS', nome: 'Gadgets' }
+  categorias: { id: number, nome: string }[] = [
+    { id: 1, nome: 'Tutorial' },
+    { id: 2, nome: 'Dicas' },
+    { id: 3, nome: 'Blog' },
+    { id: 4, nome: 'Notícias' },
+    { id: 5, nome: 'Lançamentos' },
+    { id: 6, nome: 'Reviews' },
+    { id: 7, nome: 'Comparativos' },
+    { id: 8, nome: 'Opinião' },
+    { id: 9, nome: 'Carreira' },
+    { id: 10, nome: 'Eventos' },
+    { id: 11, nome: 'Segurança' },
+    { id: 12, nome: 'Inteligência Artificial' },
+    { id: 13, nome: 'Cloud Computing' },
+    { id: 14, nome: 'Programação' },
+    { id: 15, nome: 'Banco de Dados' },
+    { id: 16, nome: 'Frontend' },
+    { id: 17, nome: 'Backend' },
+    { id: 18, nome: 'DevOps' },
+    { id: 19, nome: 'Mobile' },
+    { id: 20, nome: 'Gadgets' }
   ];
 
-
-  // Índice do post selecionado
-  indicePostSelecionado: number = -1;
-
-  constructor(private service: PostService) { }
+  constructor(private postService: PostService, private uploadService: UploadService) { }
 
   ngOnInit(): void {
     this.listar();
   }
 
   // ---------------------------
-  // Listar posts
+  // Listagem de posts
   // ---------------------------
   listar(): void {
-    this.service.listarTodos().subscribe(posts => {
-      console.log('Posts recebidos do backend:', posts);
-      this.vetor = posts;
+    this.postService.listarTodos().subscribe({
+      next: posts => {
+        console.log('Posts recebidos:', posts);
+        this.vetor = posts;
+      },
+      error: err => console.error('Erro ao listar posts:', err)
     });
   }
 
-    // Lê o arquivo de imagem e converte para Base64
-  onImagemChange(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.post.patchValue({ imagem: reader.result as string });
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
-  // Lê o arquivo de vídeo e converte para Base64
-  onVideoChange(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.post.patchValue({ video: reader.result as string });
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
 
   // ---------------------------
-  // Cadastrar novo post
+  // Seleção de arquivos
+  // ---------------------------
+  onFileSelected(event: Event, tipo: 'imagem' | 'video'): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (tipo === 'imagem') this.selectedFileImage = file;
+    else this.selectedFileVideo = file;
+  }
+
+  // ---------------------------
+  // Upload de arquivo
+  // ---------------------------
+  upload(tipo: 'imagem' | 'video'): void {
+    const file = tipo === 'imagem' ? this.selectedFileImage : this.selectedFileVideo;
+    if (!file) return;
+
+    this.uploadService.upload(file).subscribe({
+      next: event => {
+        if (event.type === HttpEventType.UploadProgress && event.total) {
+          this.uploadProgress = Math.round((event.loaded / event.total) * 100);
+        } else if (event.type === HttpEventType.Response) {
+          // Atualiza o FormGroup com o arquivo enviado
+          if (tipo === 'imagem') this.post.patchValue({ imagem: file });
+          else this.post.patchValue({ video: file });
+
+          console.log(`${tipo} enviada com sucesso!`);
+          this.uploadProgress = 0;
+        }
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error(`Erro ao enviar ${tipo}:`, err);
+        this.uploadProgress = 0;
+      }
+    });
+  }
+
+  // ---------------------------
+  // Cadastro de post
   // ---------------------------
   cadastrar(): void {
-    const novoPost: PostModel = this.post.value as PostModel;
+    if (this.post.invalid) return;
 
-    delete novoPost.id;
+    const formValue = this.post.value;
+    const formData = new FormData();
 
-    this.service.cadastrar(novoPost).subscribe(res => {
-      this.vetor.push(res);
-      this.post.reset();
+    formData.append('titulo', formValue.titulo ?? '');
+    formData.append('conteudo', formValue.conteudo ?? '');
+    formData.append('status', formValue.status ?? 'RASCUNHO');
+    if (formValue.categoria) formData.append('categoriaId', formValue.categoria.toString());
+    if (this.selectedFileImage) formData.append('imagem', this.selectedFileImage, this.selectedFileImage.name);
+    if (this.selectedFileVideo) formData.append('video', this.selectedFileVideo, this.selectedFileVideo.name);
+
+    this.postService.cadastrar(formData).subscribe({
+      next: res => {
+        this.vetor.push(res);
+        this.post.reset();
+        this.btnCadastrar = true;
+        this.selectedFileImage = undefined;
+        this.selectedFileVideo = undefined;
+        console.log('Post cadastrado com sucesso:', res);
+      },
+      error: (err: HttpErrorResponse) => console.error('Erro ao cadastrar post:', err)
     });
   }
 
@@ -126,70 +164,83 @@ export class Post implements OnInit {
   // Selecionar post para edição
   // ---------------------------
   selecionar(indice: number): void {
-    this.indicePostSelecionado = indice;
-    const id = this.vetor[indice].id;
+  this.indicePostSelecionado = indice;
+  const postSelecionado = this.vetor[indice];
+  if (!postSelecionado.id) return;
 
-    if (id != null) {
-      this.service.buscarPorId(id).subscribe(res => {
-        this.post.setValue({
-          id: res.id ?? null,
-          titulo: res.titulo ?? null,
-          conteudo: res.conteudo ?? null,
-          imagem: res.imagem ?? null,
-          video: res.video ?? null,
-          status: res.status ?? '',
-          dataCriacao: res.dataCriacao ?? null,
-          dataAtualizacao: res.dataAtualizacao ?? null,
-          dataPublicacao: res.dataPublicacao ?? null,
-          categoria: res.categoria?.id ?? null
-        });
+  this.postService.buscarPorId(postSelecionado.id).subscribe(res => {
+    this.post.setValue({
+      id: res.id ?? null,
+      titulo: res.titulo ?? null,
+      autor: res.autor ?? null,
+      conteudo: res.conteudo ?? null,
+      status: res.status ?? null,
+      categoria: res.categoria?.id ?? null,
+      imagem: null,               // controla upload separadamente
+      video: null,                // controla upload separadamente
+      dataCriacao: res.dataCriacao ? new Date(res.dataCriacao) : null,
+      dataAtualizacao: res.dataAtualizacao ? new Date(res.dataAtualizacao) : null,
+      dataPublicacao: res.dataPublicacao ? new Date(res.dataPublicacao) : null
+    });
+    this.btnCadastrar = false;
 
-        this.btnCadastrar = false;
-      });
-    }
-  }
+    // Resetar seleção de arquivos
+    this.selectedFileImage = undefined;
+    this.selectedFileVideo = undefined;
+  });
+}
+
 
   // ---------------------------
-  // Cancelar ações
+  // Cancelar edição
   // ---------------------------
   cancelar(): void {
-    console.log('Cancelando edição, resetando formulário...');
     this.post.reset();
     this.indicePostSelecionado = -1;
     this.btnCadastrar = true;
+    this.selectedFileImage = undefined;
+    this.selectedFileVideo = undefined;
   }
 
   // ---------------------------
-  // Alterar post
+  // Alterar post existente
   // ---------------------------
   alterar(): void {
-    if (this.indicePostSelecionado >= 0) {
-      const postAtualizado: PostModel = this.post.value as PostModel;
+    if (this.indicePostSelecionado < 0) return;
 
-      if (postAtualizado.id != null) {
-        this.service.atualiza(postAtualizado).subscribe(res => {
-          console.log('[COMPONENT] Post atualizado com sucesso:', res);
-          this.vetor[this.indicePostSelecionado] = res;
-          this.cancelar();
-        });
-      }
-    }
+    const postAtualizado = this.post.value;
+    if (!postAtualizado.id) return;
+
+    const formData = new FormData();
+    formData.append('titulo', postAtualizado.titulo ?? '');
+    formData.append('conteudo', postAtualizado.conteudo ?? '');
+    formData.append('status', postAtualizado.status ?? 'RASCUNHO');
+    if (postAtualizado.categoria) formData.append('categoriaId', postAtualizado.categoria.toString());
+    if (this.selectedFileImage) formData.append('imagem', this.selectedFileImage, this.selectedFileImage.name);
+    if (this.selectedFileVideo) formData.append('video', this.selectedFileVideo, this.selectedFileVideo.name);
+
+    this.postService.cadastrar(formData).subscribe({
+      next: res => {
+        this.vetor[this.indicePostSelecionado] = res;
+        this.cancelar();
+        console.log('Post atualizado com sucesso:', res);
+      },
+      error: (err: HttpErrorResponse) => console.error('Erro ao atualizar post:', err)
+    });
   }
 
   // ---------------------------
   // Remover post
   // ---------------------------
   remover(): void {
-    if (this.indicePostSelecionado >= 0) {
-      const id = this.vetor[this.indicePostSelecionado].id;
+    if (this.indicePostSelecionado < 0) return;
+    const postSelecionado = this.vetor[this.indicePostSelecionado];
+    if (!postSelecionado.id) return;
 
-      if (id != null) {
-        this.service.remove(id).subscribe(() => {
-          console.log('[COMPONENT] Post removido com sucesso');
-          this.vetor.splice(this.indicePostSelecionado, 1);
-          this.cancelar();
-        });
-      }
-    }
+    this.postService.remove(postSelecionado.id).subscribe(() => {
+      this.vetor.splice(this.indicePostSelecionado, 1);
+      this.cancelar();
+      console.log('Post removido com sucesso');
+    });
   }
 }

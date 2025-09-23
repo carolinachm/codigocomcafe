@@ -8,18 +8,17 @@ import { PostModel } from '../model/PostModel';
 })
 export class PostService {
 
-  // URL base da API para posts
   private apiUrl = 'http://localhost:8080/api/posts';
 
   constructor(private http: HttpClient) { }
 
   // ---------------------------
-  // CREATE - cadastrar novo post
+  // CREATE - cadastrar novo post com arquivos
   // ---------------------------
-  cadastrar(post: PostModel): Observable<PostModel> {
-    console.log('[SERVICE] Enviando post para cadastro:', post);
-    return this.http.post<PostModel>(this.apiUrl, post).pipe(
-      tap(res => console.log('[SERVICE] Post cadastrado (resposta):', res))
+  cadastrar(formData: FormData): Observable<PostModel> {
+    console.log('[SERVICE] Enviando FormData para cadastro:', formData);
+    return this.http.post<PostModel>(this.apiUrl, formData).pipe(
+      tap(res => console.log('[SERVICE] Post cadastrado:', res))
     );
   }
 
@@ -27,7 +26,6 @@ export class PostService {
   // READ - listar todos os posts
   // ---------------------------
   listarTodos(): Observable<PostModel[]> {
-    console.log('[SERVICE] Buscando todos os posts...');
     return this.http.get<PostModel[]>(this.apiUrl).pipe(
       tap(res => console.log('[SERVICE] Posts recebidos:', res))
     );
@@ -37,19 +35,18 @@ export class PostService {
   // READ - buscar post por ID
   // ---------------------------
   buscarPorId(id: number): Observable<PostModel> {
-    console.log(`[SERVICE] Buscando post com ID: ${id}`);
     return this.http.get<PostModel>(`${this.apiUrl}/${id}`).pipe(
       tap(res => console.log('[SERVICE] Post recebido:', res))
     );
   }
 
   // ---------------------------
-  // UPDATE - atualizar post existente
+  // UPDATE - atualizar post com arquivos
   // ---------------------------
-  atualiza(post: PostModel): Observable<PostModel> {
-    console.log('[SERVICE] Enviando post para atualização:', post);
-    return this.http.put<PostModel>(`${this.apiUrl}/${post.id}`, post).pipe(
-      tap(res => console.log('[SERVICE] Post atualizado (resposta):', res))
+  atualizar(id: number, formData: FormData): Observable<PostModel> {
+    console.log('[SERVICE] Enviando FormData para atualização:', formData);
+    return this.http.put<PostModel>(`${this.apiUrl}/${id}`, formData).pipe(
+      tap(res => console.log('[SERVICE] Post atualizado:', res))
     );
   }
 
@@ -57,9 +54,8 @@ export class PostService {
   // DELETE - remover post
   // ---------------------------
   remove(id: number): Observable<void> {
-    console.log(`[SERVICE] Removendo post com ID: ${id}`);
     return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
-      tap(() => console.log('[SERVICE] Post removido com sucesso!'))
+      tap(() => console.log('[SERVICE] Post removido com sucesso'))
     );
   }
 }
